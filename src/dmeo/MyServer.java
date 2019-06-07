@@ -7,7 +7,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 
@@ -30,6 +29,7 @@ public class MyServer {
 
 
     }
+
     public void startServer(String port) throws BindException {
         try {
             Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
@@ -39,7 +39,7 @@ public class MyServer {
                 while (nias.hasMoreElements()) {
                     InetAddress ia = (InetAddress) nias.nextElement();
                     if (!ia.isLinkLocalAddress() && !ia.isLoopbackAddress() && ia instanceof Inet4Address) {
-                       // log.info("Current IP:" + ia);
+                        // log.info("Current IP:" + ia);
                         System.out.println("Current IP:" + ia);
 
                     }
@@ -51,8 +51,8 @@ public class MyServer {
         }
         try {
             int p = Integer.parseInt(port);
-            if(p > 0 && p < 65535){
-               // log.info("Port:" + p);
+            if (p > 0 && p < 65535) {
+                // log.info("Port:" + p);
                 System.out.println("Port:" + p);
             }
 
@@ -72,8 +72,9 @@ public class MyServer {
             System.out.println("The Port Is In Use!");
         }
     }
+
     private void listen() {
-       // log.info("Is Listening!");
+        // log.info("Is Listening!");
         System.out.println("Is Listening!");
         while (true) {
             try {
@@ -84,34 +85,31 @@ public class MyServer {
                 while (((Iterator) iter).hasNext()) {
                     SelectionKey key = iter.next();
 
-                        if (key.isValid() && key.isAcceptable()) {
-                            // log.info("The Client Was Successfully Connected!");
-                            System.out.println("The Client Was Successfully Connected!");
-                            handleAccept(key);
-                        }
-                       else if (key.isValid() && key.isReadable()) {
-                            handleRead(key);
-                        }
-                        else if (key.isValid() && key.isWritable()) {
-                            //log.info("Send Messages To The Client!");
-                            System.out.println("The Port Is In Use!");
-                            handleWrite(key);
-                        }
-                        else if (key.isValid() && key.isConnectable()) {
-                            System.out.println("isConnectable = true");
-                        }
-                        else{
-                            System.out.println("ddd");
-                        }
+                    if (key.isValid() && key.isAcceptable()) {
+                        // log.info("The Client Was Successfully Connected!");
+                        System.out.println("The Client Was Successfully Connected!");
+                        handleAccept(key);
+                    } else if (key.isValid() && key.isReadable()) {
+                        handleRead(key);
+                    } else if (key.isValid() && key.isWritable()) {
+                        //log.info("Send Messages To The Client!");
+                        System.out.println("The Port Is In Use!");
+                        handleWrite(key);
+                    } else if (key.isValid() && key.isConnectable()) {
+                        System.out.println("isConnectable = true");
+                    } else {
+                        System.out.println("ddd");
+                    }
 
                     iter.remove();
                 }
             } catch (IOException e) {
-               // log.error("Read Error!");
+                // log.error("Read Error!");
                 System.out.println("Error!");
             }
         }
     }
+
     //连接客户端
     public static void handleAccept(SelectionKey key) throws IOException {
         ServerSocketChannel ssChannel = (ServerSocketChannel) key.channel();
@@ -128,31 +126,29 @@ public class MyServer {
             ByteBuffer buf = (ByteBuffer) key.attachment();
 
             ByteBuffer writeBuffer = ByteBuffer.allocateDirect(1024);
-
-
-
             int bytesRead = sc.read(buf);
-
-
             if (bytesRead > 0) {
-               // log.info("Read The Data From The Client!");
+                // log.info("Read The Data From The Client!");
                 System.out.println("read.....");
                 buf.flip();
                 byte[] bytes = new byte[bytesRead];
                 buf.get(bytes, 0, bytesRead);
                 String str = new String(bytes);
                 System.out.println(str);
+                //写回客户端
+                writeBuffer.put(("ok:" + str).getBytes());
+                writeBuffer.flip();
+                sc.write(writeBuffer);
+                writeBuffer.compact();
                 buf.clear();
-            }
-            else{
+            } else {
                 System.out.println("close");
                 sc.close();
 
             }
-        }
-            catch (Exception e) {
+        } catch (Exception e) {
             //log.error("Read Error!");
-                System.out.println("Read Error!");
+            System.out.println("Read Error!");
             key.cancel();
             sc.close();
         }
